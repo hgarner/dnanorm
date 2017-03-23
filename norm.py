@@ -125,13 +125,27 @@ def processPlatesets(platesets):
   return {'simple': simple_output, 'calculated': calculated_o, 'abort': calculated_o['abort']}
 
 def exportFiles(output_data):
-  output = open(os.path.join(config['base']['output_location'], config['base']['selector_filename']), 'w')
-  output.write('<wellNo><select><abort>\n')
+  ##
+  #output the decision data to Import.txt in output_location
+  ##
+  decision_file = open(os.path.join(config['base']['output_location'], 'Import.txt'), 'w')
+  ##
+  # output the processed data to config['processed_output_location']
+  # (normally C:\Tecan\Pegasus Data\Autohandler\PROCESSED\[%m%d%Y.%I%M%S %p]\[platename].txt)
+  ##
+  processed_file = open(os.path.join(config['base']['processed_output_location'], '{platename}.txt'.format(platename=platename)), 'w')
+
+  decision_file.write('<wellNo><select><abort>\n')
   abort_count = 0
   for sample in output_data['simple']:
-    output.write('<{well_no}><{select}><{abort}>\n'.format(well_no=sample['wellNo'], select=sample['select'], abort=sample['abort']))
-  output.write('<>\nabort={abort}'.format(abort=output_data['abort']))
-  output.close()
+    decision_file.write('<{well_no}><{select}><{abort}>\n'.format(well_no=sample['wellNo'], select=sample['select'], abort=sample['abort']))
+  decision_file.write('<>\nabort={abort}'.format(abort=output_data['abort']))
+  decision_file.close()
+
+  processed_file.write('<wellNo><wellName><wellType><OD1><OD2>\n')
+  for sample in output_data['simple']:
+    processed_file.write('<{well_no}><{well_name}><{well_type}><{od_1}><{od_2}>\n'.format(well_no=sample['wellNo'], well_name=sample['wellName'], well_type=sample['wellType'], od_1=sample['OD1'], od_2=sample['OD2']))
+  processed_file.close()
 
 class PlateSet:
   
@@ -210,6 +224,39 @@ class PlateSet:
               
     return self.plates
 
+def processTecanInput(input_filename):
+  try:
+    input_file = open(input_filename, 'r', encoding='latin-1')
+    
+    fields = []
+    data = []
+    line_no = 1
+
+    for line in input_file:
+      #clean ends of line before splitting
+      print(line)
+      line = re.sub(r'^<(.*?)>\n$', r'\1', line)
+      line_data = re.split(r'><', line)
+      line_dict = {}
+      #for field in line_data:
+      #  field = re.sub(r'^[<]{0,1}(.*?)[>]{0,1}[\n]{0,1}$', r'\1', field)
+
+      #if input_file.tell() == 1:
+      if line_no == 1:
+        #if line 1 we use this as field names
+        fields = deepcopy(line_data)
+      else:
+        #otherwise assign data to dict using fields and append to data
+        for field_index in enumerate(fields):
+          line_dict[field_index[1]] = line_data[field_index[0]]
+        data.append(line_dict)
+      line_no += 1
+
+    return data
+  except IOError as e:
+    print("Error opening or reading input file {input_filename}".format(input_filename=input_filename))
+    print(str(e))
+             
 if __name__ == '__main__':
   print(os.getcwd())
   parser = argparse.ArgumentParser(description='Process .asc concentration files to return average values and bigtime flyers')
@@ -239,11 +286,17 @@ if __name__ == '__main__':
   
   if platename_1 != platename_2:
     raise ValueError('Platenames of asc files do not match. Are there more than two .asc files present?')
+  else:
+    platename = platename_1
   #setup platesets - this will contain the data processed from the source asc files
   platesets = loadFiles(file_1, file_2)
   controls_ok = checkControls(platesets)
   output = processPlatesets(platesets)
   exportFiles(output)
   pprint(output)
+
+
+
+
 
 
