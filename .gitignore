@@ -1,0 +1,7 @@
+*.asc
+Import.txt
+Export.txt
+*.pyc
+*.txt
+*.*~
+testout
