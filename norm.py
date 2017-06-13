@@ -72,18 +72,23 @@ def processPlateset(plateset):
     out_value = None
     decision = None
     well_type = well['WellType']
-
-    if float(config['values']['flyer_lower']) > well['ratio'] or well['ratio'] > float(config['values']['flyer_upper']):
-      if well['OD1'] < well['OD2']:
-        out_value = well['OD1']
-        decision = 1
-      else:
-        out_value = well['OD2']
-        decision = 2
-      flyers_found += 1
+	
+    #if well_type is empty, set decision to 0, otherwise process as normall
+    if well_type == '':
+	  out_value = ''
+	  decision = 0
     else:
-      out_value = well['avg']
-      decision = 3
+      if float(config['values']['flyer_lower']) > well['ratio'] or well['ratio'] > float(config['values']['flyer_upper']):
+        if well['OD1'] < well['OD2']:
+          out_value = well['OD1']
+          decision = 1
+        else:
+          out_value = well['OD2']
+          decision = 2
+        flyers_found += 1
+      else:
+        out_value = well['avg']
+        decision = 3
     simple_output.append({'wellNo': well_no, 'select': decision, 'abort': 0 if decision == 3 else 1, 'wellName': well_name, 'wellType': well_type, 'OD1': well['OD1'], 'OD2': well['OD2']})
     calculated_o['values'][well_name] = out_value
     calculated_o['decision'][well_name] = decision
