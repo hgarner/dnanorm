@@ -19,13 +19,9 @@ def loadConfig(config_filename = 'config.ini', config = None):
   #    config['control_locations'][c_type] = config['control_locations'][c_type].split(',')
   return config
 
-def loadFiles(file_1, file_2):
-  plate_1 = PlateSet()
-  plate_2 = PlateSet()
-  plate_1.processCsv(file_1)
-  plate_2.processCsv(file_2)
-  return {'plate_1': plate_1, 'plate_2': plate_2}
-
+#processes plateset from processTecanInput
+#goes through wells, if control then check if within deviation from expected val
+#return false if any val outside deviation, true if all passed
 def checkControls(plateset):
 
   pos_control_max = float(config['values']['expected_control_value']) + float(config['values']['deviation_from_expected_control_value'])
@@ -116,7 +112,10 @@ def exportFiles(output_data):
   # output the processed data to config['processed_output_location']
   # (normally C:\Tecan\Pegasus Data\Autohandler\PROCESSED\[%m%d%Y.%I%M%S %p]\[platename].txt)
   ##
-  processed_file = open(os.path.join(config['base']['processed_output_location'], '{platename}.txt'.format(platename=platename)), 'w')
+  from datetime import datetime
+  now = datetime.now()
+  processed_file_dir = '{now.year}{now.month:0>2}{now.day:0>2}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now) 
+  processed_file = open(os.path.join(config['base']['processed_output_location'], processed_file_dir, '{platename}.txt'.format(platename=platename)), 'w')
 
   decision_file.write('<wellNo><select><abort>\n')
   abort_count = 0
