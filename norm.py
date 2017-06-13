@@ -91,7 +91,7 @@ def processPlateset(plateset):
     if flyers_found > int(config['values']['limit_acceptable_bigtime_flyers']):
       calculated_o['abort'] = 1
 
-  pprint(calculated_o)
+  #pprint(calculated_o)
   #do mean and sd of ratios for non-bigtime_flyers (decision = 3)
   usable_values = []
   for well, ratio in calculated_o['ratios'].items():
@@ -115,6 +115,12 @@ def exportFiles(output_data):
   from datetime import datetime
   now = datetime.now()
   processed_file_dir = '{now.day:0>2}{now.month:0>2}{now.year}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now = now) 
+  #make output dir if not exists
+  try:
+    os.stat(os.path.join(config['base']['processed_output_location'], processed_file_dir))
+  except:
+    os.mkdir(os.path.join(config['base']['processed_output_location'], processed_file_dir))
+  
   processed_file = open(os.path.join(config['base']['processed_output_location'], processed_file_dir, '{platename}.txt'.format(platename=platename)), 'w')
 
   decision_file.write('<wellNo><select><abort>\n')
@@ -139,7 +145,7 @@ def processTecanInput(input_filename):
 
     for line in input_file:
       #clean ends of line before splitting
-      print(line)
+      #print(line)
       line = re.sub(r'^<(.*?)>\n$', r'\1', line)
       line_data = re.split(r'><', line)
       line_dict = {}
@@ -197,19 +203,28 @@ if __name__ == '__main__':
   #our output will be called 'Import.txt' as per current output
   platename = None
   print(config['base']['tecan_export_location'])
-  for root, dirs, files in os.walk(config['base']['tecan_export_location']):
+  for files in next(os.walk(config['base']['tecan_export_location'])):
     for filename in files:
       namematch = re.search(r'^([a-zA-Z_\-]+?[0-9]+?)(\.txt$)', filename)
       if namematch is not None:
-        tecan_export_file = os.path.join(root, filename)
+        tecan_export_file = os.path.join(config['base']['tecan_export_location'], filename)
         platename = namematch.group(1)
+    #we don't want to go into subdirs, so break after doing files
+    #break
   
   #setup platesets - this will contain the data processed from the source asc files
+  try:
+    print('Tecan export file:')
+    pprint(tecan_export_file)
+  except NameError:
+    print('Unable to find Tecan export file')
+    exit(1)
   plateset = processTecanInput(tecan_export_file)
   controls_ok = checkControls(plateset)
   output = processPlateset(plateset)
   exportFiles(output)
-  pprint(output)
+  #pprint(output)
+  exit(0)
 
 
 
