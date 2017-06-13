@@ -12,7 +12,7 @@ def loadConfig(config_filename = 'config.ini', config = None):
   root_dir = os.getcwd()
   if config is None:
     config = configparser.ConfigParser()
-  config.read(os.path.join(config_filename))
+  config.read(os.path.join(root_dir, config_filename))
   pprint(config.sections())
   #if 'control_locations' in config.sections():
   #  for c_type in config['control_locations']:
@@ -114,7 +114,7 @@ def exportFiles(output_data):
   ##
   from datetime import datetime
   now = datetime.now()
-  processed_file_dir = '{now.day:0>2}{now.month:0>2}{now.year}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now) 
+  processed_file_dir = '{now.day:0>2}{now.month:0>2}{now.year}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now = now) 
   processed_file = open(os.path.join(config['base']['processed_output_location'], processed_file_dir, '{platename}.txt'.format(platename=platename)), 'w')
 
   decision_file.write('<wellNo><select><abort>\n')
@@ -185,7 +185,8 @@ if __name__ == '__main__':
   global args
   args = parser.parse_args()
   global config
-  config = loadConfig('/home/edzhg/repos/dnanorm/base_config.ini')
+  config = loadConfig('base_config.ini')
+  pprint(config.sections())
   pprint(args.config_filename)
   config = loadConfig(args.config_filename, config)
 
