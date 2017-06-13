@@ -110,11 +110,11 @@ def exportFiles(output_data):
   decision_file = open(os.path.join(config['base']['output_location'], 'Import.txt'), 'w')
   ##
   # output the processed data to config['processed_output_location']
-  # (normally C:\Tecan\Pegasus Data\Autohandler\PROCESSED\[%m%d%Y.%I%M%S %p]\[platename].txt)
+  # (normally C:\Tecan\Pegasus Data\Autohandler\processed\[%d%m%Y.%H%M%S]\[platename].txt)
   ##
   from datetime import datetime
   now = datetime.now()
-  processed_file_dir = '{now.year}{now.month:0>2}{now.day:0>2}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now) 
+  processed_file_dir = '{now.day:0>2}{now.month:0>2}{now.year}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now) 
   processed_file = open(os.path.join(config['base']['processed_output_location'], processed_file_dir, '{platename}.txt'.format(platename=platename)), 'w')
 
   decision_file.write('<wellNo><select><abort>\n')
