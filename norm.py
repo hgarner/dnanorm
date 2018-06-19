@@ -108,21 +108,21 @@ def processPlateset(plateset):
   #return calculated_o
   return {'simple': simple_output, 'calculated': calculated_o, 'abort': calculated_o['abort']}
 
-#export the output data to dir [ddmmyyyy.hhmmss] in config['processed_output_location']
+#export the output data to dir [ddmmyyyy.hhmmss] in config['base']['processed_output_location']
 def exportFiles(output_data):
   ##
   #output the decision data to Import.txt in output_location
   ##
   decision_file = open(os.path.join(config['base']['output_location'], 'Import.txt'), 'w')
   ##
-  # output the processed data to config['processed_output_location']
+  # output the processed data to config['base']['processed_output_location']
   # (normally C:\Tecan\Pegasus Data\Autohandler\processed\[%d%m%Y.%H%M%S]\[platename].txt)
   ##
   from datetime import datetime
   now = datetime.now()
   processed_file_dir = '{now.day:0>2}{now.month:0>2}{now.year}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now = now) 
   #set config['process_file_dir']
-  config['processed_file_dir'] = processed_file_dir
+  config['base']['processed_file_dir'] = processed_file_dir
   #make output dir if not exists
   try:
     os.stat(os.path.join(config['base']['processed_output_location'], processed_file_dir))
@@ -192,19 +192,19 @@ def processTecanInput(input_filename):
     print("Error opening or reading input file {input_filename}".format(input_filename=input_filename))
     print(str(e))
 
-#clean any residual files and move the inputfile to config['processed_file_dir'] 
+#clean any residual files and move the inputfile to config['base']['processed_file_dir'] 
 #(usually processed/[datetime])
 def cleanupFiles(tecan_export_file, *args):
   #currently only needs to move tecan_export_file
   #additional files may be added as *args (tecan_export_location is prepended to filename)
   try:
-    os.rename(tecan_export_file, os.path.join(config['processed_output_location'], config['processed_file_dir'], os.path.split(tecan_export_file)[1])
+    os.rename(tecan_export_file, os.path.join(config['base']['processed_output_location'], config['base']['processed_file_dir'], os.path.split(tecan_export_file)[1]))
   except OSError:
     print('Unable to move Tecan export file. Already done?')
   except:
     print('Error moving Tecan export file.')
 
-  for filename in *args:
+  for filename in args:
     try:
       os.remove(os.path.join(config['base']['tecan_export_location'], filename))
     except OSError:
