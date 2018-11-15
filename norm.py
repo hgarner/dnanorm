@@ -104,8 +104,9 @@ def processPlateset(plateset):
   for well, ratio in calculated_o['ratios'].items():
     if calculated_o['decision'][well_name] == 3:
       usable_values.append(ratio)
-  calculated_o['ratio_mean'] = mean(usable_values)
-  calculated_o['ratio_sd'] = stdev(usable_values)
+  if len(usable_values) > 0:
+    calculated_o['ratio_mean'] = mean(usable_values)
+    calculated_o['ratio_sd'] = stdev(usable_values)
 
   return {'simple': simple_output, 'calculated': calculated_o, 'abort': calculated_o['abort']}
 
@@ -280,6 +281,7 @@ if __name__ == '__main__':
     # print the error and exit
     print(e)
     exit(1)
+
 
 
 
