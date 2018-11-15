@@ -103,10 +103,14 @@ def processPlateset(plateset):
   usable_values = []
   for well, ratio in calculated_o['ratios'].items():
     if calculated_o['decision'][well_name] == 3:
+      pprint(well_name)
+      pprint(ratio)
       usable_values.append(ratio)
-  if len(usable_values) > 0:
-    calculated_o['ratio_mean'] = mean(usable_values)
-    calculated_o['ratio_sd'] = stdev(usable_values)
+  #if len(usable_values) > 0:
+  #  calculated_o['ratio_mean'] = mean(usable_values)
+  #  calculated_o['ratio_sd'] = stdev(usable_values)
+  calculated_o['ratio_mean'] = mean(usable_values)
+  calculated_o['ratio_sd'] = stdev(usable_values)
 
   return {'simple': simple_output, 'calculated': calculated_o, 'abort': calculated_o['abort']}
 
@@ -201,13 +205,21 @@ def cleanupFiles(tecan_export_file, *args):
   # currently only needs to move tecan_export_file
   # additional files may be added as *args 
   # (tecan_export_location is prepended to filename)
+  # try copying the file first to processed_output_location
+  # if this fails (output location doesn't exist), assume script has errored
+  # in any case, then remove the tecan_export_file
   try:
-    shutil.move(tecan_export_file, os.path.join(config['base']['processed_output_location'], config['base']['processed_file_dir'], os.path.split(tecan_export_file)[1]))
+    shutil.copy(tecan_export_file, os.path.join(config['base']['processed_output_location'], config['base']['processed_file_dir'], os.path.split(tecan_export_file)[1]))
+  except Exception as e:
+    print('Error copying Tecan export file.')
+    
+  try:
+    os.remove(tecan_export_file)
   except OSError:
-    print('Unable to move Tecan export file. Already done?')
+    print('Unable to remove Tecan export file. Already done?')
   except:
-    print('Error moving Tecan export file.')
-
+    print('Error removing Tecan export file')
+    
   for filename in args:
     try:
       os.remove(os.path.join(config['base']['tecan_export_location'], filename))
@@ -267,6 +279,7 @@ if __name__ == '__main__':
     # generate the output by processing the plateset generated from the 
     # tecan_export_file
     output = processPlateset(plateset)
+    pprint(output)
 
     # output the data - Import.txt (decision) to processed_output_location,
     # the results of the processing (values) to output_location
