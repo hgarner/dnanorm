@@ -2,6 +2,7 @@ import csv
 import re
 import os
 import sys
+import shutil
 from statistics import mean, stdev
 import configparser
 import argparse
@@ -200,7 +201,7 @@ def cleanupFiles(tecan_export_file, *args):
   # additional files may be added as *args 
   # (tecan_export_location is prepended to filename)
   try:
-    os.rename(tecan_export_file, os.path.join(config['base']['processed_output_location'], config['base']['processed_file_dir'], os.path.split(tecan_export_file)[1]))
+    shutil.move(tecan_export_file, os.path.join(config['base']['processed_output_location'], config['base']['processed_file_dir'], os.path.split(tecan_export_file)[1]))
   except OSError:
     print('Unable to move Tecan export file. Already done?')
   except:
