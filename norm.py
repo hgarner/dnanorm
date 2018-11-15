@@ -19,9 +19,10 @@ def loadConfig(config_filename = 'config.ini', config = None):
   #    config['control_locations'][c_type] = config['control_locations'][c_type].split(',')
   return config
 
-#processes plateset from processTecanInput
-#goes through wells, if control then check if within deviation from expected val
-#return false if any val outside deviation, true if all passed
+# processes plateset from processTecanInput
+# goes through wells, if control then check if within deviation 
+# from expected val
+# return false if any val outside deviation, true if all passed
 def checkControls(plateset):
 
   pos_control_max = float(config['values']['expected_control_value']) + float(config['values']['deviation_from_expected_control_value'])
@@ -41,15 +42,16 @@ def wellKey(well):
   well_split = re.search(r'(^[A-Z]{1})([0-9]{2})$', well)
   return '{num}{letter}'.format(num=well_split.group(2), letter=well_split.group(1))
 
-#process the plateset (data from processTecanInput)
-#return a dict containing:
-# - processed values (average of plate_1 (OD1) and plate_2 (OD2), or the lower if ratio bounds are exceeded
+# process the plateset (data from processTecanInput)
+# return a dict containing:
+# - processed values (average of plate_1 (OD1) and plate_2 (OD2), 
+#   or the lower if ratio bounds are exceeded
 # - ratios of plate_1/plate_2 values
 # - which value used ('decision') (1 = plate_1, 2 = plate_2, 3 = average)
 # - abort (0/1) set to 1 if more than limit_acceptable_bigtime_flyers are found
 # - ratio_mean and ratio_sd for all ratios (excluding 'bigtime flyers' i.e. decision 1 or 2)
 def processPlateset(plateset):
-  #set up output dict
+  # set up output dict
   calculated_o = {
     'values': {},
     'ratios': {},
@@ -73,7 +75,7 @@ def processPlateset(plateset):
     decision = None
     well_type = well['WellType']
     
-    #if well_type is empty, set decision to 0, otherwise process as normall
+    # if well_type is empty, set decision to 0, otherwise process as normall
     if well_type == '':
       out_value = ''
       decision = 0
@@ -96,8 +98,7 @@ def processPlateset(plateset):
     if flyers_found > int(config['values']['limit_acceptable_bigtime_flyers']):
       calculated_o['abort'] = 1
 
-  #pprint(calculated_o)
-  #do mean and sd of ratios for non-bigtime_flyers (decision = 3)
+  # do mean and sd of ratios for non-bigtime_flyers (decision = 3)
   usable_values = []
   for well, ratio in calculated_o['ratios'].items():
     if calculated_o['decision'][well_name] == 3:
@@ -105,10 +106,9 @@ def processPlateset(plateset):
   calculated_o['ratio_mean'] = mean(usable_values)
   calculated_o['ratio_sd'] = stdev(usable_values)
 
-  #return calculated_o
   return {'simple': simple_output, 'calculated': calculated_o, 'abort': calculated_o['abort']}
 
-#export the output data to dir [ddmmyyyy.hhmmss] in config['base']['processed_output_location']
+# export the output data to dir [ddmmyyyy.hhmmss] in config['base']['processed_output_location']
 def exportFiles(output_data):
   ##
   #output the decision data to Import.txt in output_location
@@ -121,9 +121,9 @@ def exportFiles(output_data):
   from datetime import datetime
   now = datetime.now()
   processed_file_dir = '{now.day:0>2}{now.month:0>2}{now.year}.{now.hour:0>2}{now.minute:0>2}{now.second:0>2}'.format(now = now) 
-  #set config['process_file_dir']
+  # set config['process_file_dir']
   config['base']['processed_file_dir'] = processed_file_dir
-  #make output dir if not exists
+  # make output dir if not exists
   try:
     os.stat(os.path.join(config['base']['processed_output_location'], processed_file_dir))
   except:
@@ -143,6 +143,9 @@ def exportFiles(output_data):
     processed_file.write('<{well_no}><{well_name}><{well_type}><{od_1}><{od_2}>\n'.format(well_no=sample['wellNo'], well_name=sample['wellName'], well_type=sample['wellType'], od_1=sample['OD1'], od_2=sample['OD2']))
   processed_file.close()
 
+# process the raw input file
+# return a list with element for each line
+# containing dicts of {fieldname: fieldvalue, ...} 
 def processTecanInput(input_filename):
   try:
     input_file = open(input_filename, 'r', encoding='latin-1')
@@ -153,14 +156,10 @@ def processTecanInput(input_filename):
 
     for line in input_file:
       #clean ends of line before splitting
-      #print(line)
       line = re.sub(r'^<(.*?)>\n$', r'\1', line)
       line_data = re.split(r'><', line)
       line_dict = {}
-      #for field in line_data:
-      #  field = re.sub(r'^[<]{0,1}(.*?)[>]{0,1}[\n]{0,1}$', r'\1', field)
 
-      #if input_file.tell() == 1:
       if line_no == 1:
         #if line 1 we use this as field names
         fields = deepcopy(line_data)
@@ -170,6 +169,7 @@ def processTecanInput(input_filename):
           try:
             line_dict[field_index[1]] = line_data[field_index[0]]
           except IndexError as e:
+            print('Error processing input file')
             print(fields)
             print(line_data)
             print(line_dict)
@@ -192,11 +192,13 @@ def processTecanInput(input_filename):
     print("Error opening or reading input file {input_filename}".format(input_filename=input_filename))
     print(str(e))
 
-#clean any residual files and move the inputfile to config['base']['processed_file_dir'] 
-#(usually processed/[datetime])
+# clean any residual files and move the inputfile 
+# to config['base']['processed_file_dir'] 
+# (usually processed/[datetime])
 def cleanupFiles(tecan_export_file, *args):
-  #currently only needs to move tecan_export_file
-  #additional files may be added as *args (tecan_export_location is prepended to filename)
+  # currently only needs to move tecan_export_file
+  # additional files may be added as *args 
+  # (tecan_export_location is prepended to filename)
   try:
     os.rename(tecan_export_file, os.path.join(config['base']['processed_output_location'], config['base']['processed_file_dir'], os.path.split(tecan_export_file)[1]))
   except OSError:
@@ -212,6 +214,14 @@ def cleanupFiles(tecan_export_file, *args):
     except:
       print('Error removing file {filename}.'.format(filename=filename))
              
+# run from command line
+# - parse the provided arg for config file
+# - load the config file to get input/output locations etc
+# - process the input file to get values for each plate well
+# - process the dataset to get averages and decisions for each well,
+#   plus abort flag
+# - write output to relevant locations
+# - cleanup input file(s)
 if __name__ == '__main__':
   print(os.getcwd())
   parser = argparse.ArgumentParser(description='Process Tecan export .txt conentration files to return average values and bigtime flyers')
@@ -224,11 +234,11 @@ if __name__ == '__main__':
   pprint(args.config_filename)
   config = loadConfig(args.config_filename, config)
 
-  #get file
-  #this should be in C:\ProgramData\Tecan\Pegasus\ALSPAC\AutoHandler\
-  #named as [platename].txt
-  #as Tecan calls it the 'export' file we'll stick with that
-  #our output will be called 'Import.txt' as per current output
+  # get file
+  # this should be in C:\ProgramData\Tecan\Pegasus\ALSPAC\AutoHandler\
+  # named as [platename].txt
+  # as Tecan calls it the 'export' file we'll stick with that
+  # our output will be called 'Import.txt' as per current output
   platename = None
   print(config['base']['tecan_export_location'])
   for files in next(os.walk(config['base']['tecan_export_location'])):
@@ -238,20 +248,37 @@ if __name__ == '__main__':
         tecan_export_file = os.path.join(config['base']['tecan_export_location'], filename)
         platename = namematch.group(1)
   
-  #setup platesets - this will contain the data processed from the source asc files
+  # setup platesets - this will contain the data processed from the source asc files
   try:
     print('Tecan export file:')
     pprint(tecan_export_file)
   except NameError:
     print('Unable to find Tecan export file')
     exit(1)
-  plateset = processTecanInput(tecan_export_file)
-  controls_ok = checkControls(plateset)
-  output = processPlateset(plateset)
-  exportFiles(output)
-  #pprint(output)
-  cleanupFiles(tecan_export_file)
-  exit(0)
+
+  try: 
+    plateset = processTecanInput(tecan_export_file)
+
+    # check the controls are ok
+    controls_ok = checkControls(plateset)
+
+    # generate the output by processing the plateset generated from the 
+    # tecan_export_file
+    output = processPlateset(plateset)
+
+    # output the data - Import.txt (decision) to processed_output_location,
+    # the results of the processing (values) to output_location
+    exportFiles(output)
+
+    # cleanup files (usually just those copied to tecan_export_location)
+    cleanupFiles(tecan_export_file)
+    exit(0)
+  except Exception as e:
+    # on error, we still need to cleanup file copied to tecan_export_location
+    cleanupFiles(tecan_export_file)
+    # print the error and exit
+    print(e)
+    exit(1)
 
 
 
